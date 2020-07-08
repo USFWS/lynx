@@ -1,0 +1,283 @@
+%%###############################################################################
+%% Project title: Northwest Boreal Forest Lynx Project
+%% Author: Jared Laufenberg
+%% Email: Jared_Laufenberg@fws.gov
+%% Date created: 06/15/2018
+%% Date last edited: 05/15/2020
+%%
+%% This script is a .Rnw file used by the knitr package to compile
+%% LaTeX and R code into a .tex file for generating a PDF-formatted
+%% document that contains a QA/QC report for all Telonics GPS collars
+%% deployed on Canada lynx as part of the Northwest Boreal Forest Lynx
+%% Project. It depends on flat-formatted files containing GPS
+%% locations for all collared lynx (flat.gps.gzip), a mortality
+%% notifications (flat.mort.gzip), and a SpatialPolygonsDataFrame R
+%% object saved as a .gzip file.
+%% Edits made on 6/12/2019 to pull collar data from and write reports to im_archive dir
+%% Edit made on 5/15/2020 to resolve issue with determining last date
+%% for summary table vs last date used to test for out of study area
+%% #################################################################################
+
+
+\documentclass[12pt]{article}
+
+\usepackage{parskip}
+\usepackage[hmargin=1in,vmargin=1in]{geometry}
+\usepackage[pdftex,hidelinks]{hyperref}
+\usepackage{verbatim}
+\usepackage{longtable}
+\usepackage{caption}
+\usepackage{graphicx} %% for importing graphics
+\usepackage{float}
+\usepackage{booktabs}
+\usepackage{rotating} %% for rotating table to landscape orientation
+\usepackage{pdflscape} %% for changing page layout orientation
+
+\begin{document}
+
+
+\title{Northwest Boreal Forest Lynx Project \\
+  Telonics GPS data QA/QC report}
+\author{Jared Laufenberg \\ Inventory and Monitoring Program \\
+  Alaska National Wildlife Refuge System \\ U.S. Fish and Wildlife
+  Service \\ \href{mailto:jared\_laufenberg@fws.gov}{jared\_laufenberg@fws.gov}
+}
+\date{\today}
+
+\maketitle
+
+\clearpage
+
+\tableofcontents
+
+
+\newpage
+
+\section{General summary}
+
+<<setup, cache=FALSE, include=FALSE>>=
+opts_knit$set(base.dir=normalizePath("../incoming/temp/"))
+@
+
+<<data1, echo=FALSE, results="hide", cache=FALSE, message=FALSE, warning=FALSE, error=FALSE>>=
+dir.path <- "../incoming/temp/"
+require(ggplot2)
+require(ggmap)
+require(ggsn)
+require(moveHMM)
+require(sp)
+require(rgdal)
+require(zoo)
+require(rgeos)
+require(geosphere)
+library(scrbook)
+source("../code/functions/check4morts.R")
+source("../code/functions/check4out.R")
+source("../code/functions/fixtime.diff.R")
+source("../code/functions/make.HMMdata.R")
+source("../code/functions/make.SPDFdata.R")
+source("../code/functions/compassbearing.R")
+source("../code/functions/cdist.calc.R")
+source("../code/functions/cdist.plot.R")
+source("../code/functions/cdist.fig.R")
+source("../code/functions/step.plot.R")
+source("../code/functions/step.fig.R")
+source("../code/functions/angle.plot.R")
+source("../code/functions/angle.fig.R")
+source("../code/functions/create.indv.plots.R")
+save.data <- TRUE
+x <- get(load("../data/derived_data/gps_collar/telonics/flat.gps.gzip"))
+m <- get(load("../data/derived_data/gps_collar/telonics/flat.mort.gzip"))
+fence <- gBuffer(spTransform(get(load(paste0("../resources/geodata/nwbf_lynx_study_area/",
+                                             "NWBFlynx_StudyAreaBoundary.gzip"))),CRS("+init=epsg:3338")),
+                 byid=FALSE, width=50000)
+x$date <- as.Date(x$fixtime)
+x$datefac <- as.factor(x$date)
+xlist <- split(x,x$id)
+nid <- length(xlist)
+fttable <- as.data.frame(do.call("rbind",lapply(xlist,function(x)as.character(base::as.Date(range(x$fixtime))))))
+colnames(fttable) <- c("Start", "Last")
+ftable <- as.data.frame(do.call("rbind",lapply(xlist,function(x)table(x$fixtype))))
+colnames(ftable)[1:4] <- c("Res","Unc","Unr","Miss")
+sites <- lapply(xlist,function(x)x$deploy.site[1])
+ftable[,"Success Rate"] <- round(apply(ftable,1,function(x)sum(x[1:2])/sum(x)),3)
+ftable <- data.frame(ID=rownames(ftable),
+                        Site=levels(x$deploy.site)[as.numeric(sites)],
+                        ftable,
+                        fttable, check.names=FALSE)
+ftable <- data.frame(ftable, Mortality=NA, Displace=0, Bearing=0, Out=NA, check.names=FALSE)
+attributes(ftable$Displace) = list(units="km")
+attributes(ftable$Bearing) = list(units="degrees")
+mlist <- split(m,m$id)
+stepcut = 5
+ma.order = 42
+levs1 = c("Resolved QFP", "Resolved QFP (Uncertain)",
+          "Unresolved QFP", "Missing") # types of GPS fixes
+nlevs1 = length(levs1)
+levs2 = c("Primary","Auxiliary 1","Auxiliary 2","Auxiliary 3") # fix-rate schedule names
+nlevs2 = length(levs2)
+levs3 = c("P","A1","A2","A3")
+maxstep = rep(0,nid)
+ftable$Mortality <- unlist(lapply(mlist,check4morts))
+for(i in 1:nid){
+    ctn = names(xlist)[i]
+    site = as.character(xlist[[i]]$deploy.site[1])
+    last = as.character(base::as.Date(max(xlist[[i]]$fixtime[xlist[[i]]$fixtype %in% levs1[1:2]])))
+    attributes(xlist[[i]]) = c(attributes(xlist[[i]]),list(ctn=ctn,site=site,lastdate=last))
+    ftable$Out[i] <- check4out(xlist[[i]],fence)
+}
+HMMlist <- lapply(xlist,make.HMMdata) # removes locations classified as "Missing" or "Unresolved QFP"
+spdflist <- lapply(xlist,make.SPDFdata) # removes locations classified as "Missing" or "Unresolved QFP"
+if(save.data){save(spdflist,file="../data/derived_data/gps_collar/telonics/spdfdata.gzip")}
+ftable$Displace <- sapply(spdflist,function(x){round(spDistsN1(x[1,],x[nrow(x),],longlat=TRUE),3)})
+ftable$Bearing <- sapply(spdflist,compassbearing)
+ftable$maxdisplace <- unlist(lapply(split(x,x$id),function(x){
+    x <- x[x$fixtype%in%levs1[1:2],]
+    coordinates(x) = ~lon+lat
+    proj4string(x) = CRS("+init=epsg:4326") #WGS84
+    x <- spTransform(x, proj4string(fence))
+    x <- max(e2dist(coordinates(x),coordinates(x))[1,])/1000
+    return(x)
+}))
+attributes(ftable$maxdisplace) = list(units="km")
+median.fsr <- median(ftable[,"Success Rate"])
+sd.fsr <- round(sd(ftable[,"Success Rate"]),3)
+subset.fsr <- ftable[!ftable[,"Success Rate"]<0.5,"Success Rate"]
+nbad.fsr <- sum(ftable[,"Success Rate"]<0.5)
+morttime1 <- sapply(mlist,check4morts,as.char=TRUE,as.date=TRUE)
+date1 <- min(as.Date(x$fixtime))
+date2 <- max(as.Date(x$fixtime))
+alldaterange <- as.character(seq(date1,date2,by="day"))
+@
+
+
+This section contains summary information for \Sexpr{nid} deployed Telonics GPS collars. Table \ref{summarytable} presents collar-specifc information in each row including collar deployment site (Site), counts of locations classified by fix type category (i.e., Resolved QFP, Resolved QFP (Uncertain), Unresolved QFP, and Missing), and fix success rate (SuccessRate). Fix success rate is calculated as the proportion of fixes classified as Resolved QFP or Resolved QFP (Uncertain). Figure \ref{fig:histogram1} is a histogram of fix success rates for all deployed collars. The median fix success rate $=$ \Sexpr{median.fsr} (SE $=$ \Sexpr{sd.fsr}) and is represented by a red vertical dashed line. The number of collars with a fix success rate $<$0.5 is \Sexpr{nbad.fsr}. The time stamps for first (Start) and most recent (Last) location fixes are also reported.
+
+
+\newpage
+
+\begin{landscape}
+
+\captionsetup{justification=justified, singlelinecheck=false}
+
+
+<<table1, echo=FALSE, results="asis", message=FALSE, warning=FALSE, error=FALSE>>=
+library(knitr)
+library(xtable)
+qaqc.table <- ftable[,which(!colnames(ftable)=="maxdisplace")]
+summary.table <- xtable(qaqc.table, caption="Individual-specific counts of GPS locations binned by fix type category: Resolved QFP (Res), Resolved QFP-Uncertain (Unc), Unresolved QFP (Unr), and Missing (Miss). Success rate is the proportion of fixes classified as Resolved QFP or Resolved QFP (Uncertain). Study sites include Kanuti NWR (KAN), Koyukuk NWR (KOY), Tetlin NWR (TET), Wiseman-Gates of the Arctic NP (WIS), and Yukon Flats NWR (YKF). Individual IDs are Telonics CTN serial numbers. Time stamps for first and most recent location are listed under Start and Last. The Mortality column reports the first date that collar activity switched to mortality. Note that collars turned on and temporarily stored in a stationary location may record erroneous mortality events so further verification of mortalities is recommended. Displace is the net displacement (i.e., straight-line distance) for each individual measured in kilometers between the first and last QFP location. Bearing is the direction for each individual measured in degrees from the first to the last QFP location. A value of 'Yes' in the Out column indicates an individual that has remained 50 km beyond the Northwest Boreal Forest LCC boundary for the entire week prior to the last known location. A value of 'Unc' in the Out column indicates locations were collected during the prior week, but all were classified as Unresolved QFP, thus making determination of Out status uncertain.",label="summarytable")
+align(summary.table) <- c(paste0("p{",c(0, 0.6, 0.35, 0.3, 0.3, 0.3, 0.3, 0.5,
+                                        rep(0.8,3)),"in}"),rep("r",2),"p{0.35in}")
+add.to.row <- list(pos = list(0), command = NULL)
+command <- paste0("\\hline \n",
+                  "\\endfirsthead \n",
+                  "\\hline \n",
+                  "ID & Site & Res & Unc & Unr & ",
+                  "Miss & Success Rate & Start & Last & Mortality & Displace & Bearing & Out\\\\\n",
+                  "\\hline \n",
+                  "\\endhead \n",
+                  "\\hline \n",
+                  "\\multicolumn{",dim(qaqc.table)[2],"}{l}{\\footnotesize Continued on next page} \n",
+                  "\\endfoot \n",
+                  "\\endlastfoot \n")
+add.to.row$command <- command
+print(summary.table, tabular.environment="longtable", add.to.row=add.to.row, floating.environment = "sidewaystable",
+      floating=FALSE, caption.placement="top", include.rownames=FALSE, hline.after=c(-1))
+@
+
+\end{landscape}
+\clearpage
+
+<<histogram1, echo=FALSE, results="hide", fig.cap=paste0("Histogram of success rates for ",nid," deployed Telonics GPS collars. The median fix success rate = ",median.fsr," (SE = ",sd.fsr,") and is represented by a red vertical dashed line. The number of collars with a fix success rate $<$0.5 is ",nbad.fsr,".")>>=
+myhist <- function(){hist(subset.fsr,xlim=c(0.5,1),breaks=seq(0.5,1,0.005),xlab="Fix success rate",
+                          main="")
+                          abline(v=median.fsr,lwd=2,lty=2,col="red")
+}
+print(myhist())
+@
+\clearpage
+
+<<polarplot1, echo=FALSE, results="hide", fig.cap=paste0("Polar plot of net displacement (km) between first and last locations in east-west and north-south directions. Solid lines represent east-west and north-south lines. Each dashed line is a single lynx.")>>=
+mypolar <- function(){
+    polar2cart <- function(x=0,y=0,dist,bearing,as.deg=FALSE){
+    ## Translate Polar coordinates into Cartesian coordinates
+    ## based on starting location, distance, and bearing
+    ## as.deg indicates if the bearing is in degrees (T) or radians (F)
+        if(as.deg){
+            ##if bearing is in degrees, convert to radians
+            bearing=bearing*pi/180
+        }
+        newx<-x+dist*sin(bearing)  ##X
+        newy<-y+dist*cos(bearing)  ##Y
+        return(c("x"=newx,"y"=newy))
+    } #fn
+    cartcoords <- matrix(0,nid,2)
+    for(i in 1:nrow(ftable)){
+        cartcoords[i,] <- polar2cart(dist=ftable[i,"Displace"], bearing=ftable[i,"Bearing"],
+                                     as.deg=TRUE)
+    }
+    par(fig=c(0,1,0,1))
+    plot(1,type="n",xlim=range(cartcoords[,1]),ylim=range(cartcoords[,2]),
+         xlab="East-west displacement (km)", ylab="North-South displacement (km)")
+    abline(v=0)
+    abline(h=0)
+    apply(cartcoords,1,function(x){segments(0,0,x[1],x[2],lty=2)})
+    u <- par("usr")
+    v <- c(grconvertX(u[1:2],"user","ndc"), grconvertY(u[3:4],"user","ndc"))
+    par(fig=c(diff(v[1:2])*0.6+v[1],v[2],diff(v[3:4])*0.6+v[3],v[4]), new=TRUE, mar=c(0,0,0,0))
+    plot(1,type="n",xlim=c(-40,40),ylim=c(-40,40),
+         xlab="East-west displacement (km)", ylab="North-South displacement (km)")
+    abline(v=0)
+    abline(h=0)
+    apply(cartcoords,1,function(x){segments(0,0,x[1],x[2],lty=2)})
+} #fn
+print(mypolar())
+@
+\clearpage
+
+\section{Individual collar summaries}
+This section contains collar-specific summary information presented in
+a set of 9 different figures presented across 3 pages for each collar. The first
+figure (first page)is a cumulative daily distance traveled (km) plot. The second and third figures (second page) are a time series
+plot and histogram of step lengths (km) collected at 4-hour intervals. The red line in the
+time series plot represents the 2-week running average step length. The
+fourth and fifth figures (also second page) include a time series plot
+and histogram for turning angles measured in radians collected at
+4-hour intervals. The final four figures (third page) are the same as as the previous 4 except that the movement
+data is limited to the most recent 2 weeks and the moving average line
+is omitted.  All figures are based on GPS locations classified as Resolved QFP or Resolved QFP-Uncertain.
+
+\clearpage
+
+
+<<echo=FALSE, results="asis", message=FALSE, warning=FALSE, error=FALSE>>=
+figdir.path <- paste0(dir.path,"figure/")
+makehmm <- TRUE
+makecd <- TRUE
+makeplots <- TRUE
+startdate1 = "first"
+startdate2 = 84
+duration1 = "for the entire deployment period"
+duration2 = "for the past 2 weeks"
+dummy <- mapply(create.indv.plots,HMMdata=HMMlist,morttime=morttime1,
+                MoreArgs=list(daterange=alldaterange,ymax=3000,fixrate="4",
+                              stepcut=stepcut,ma.order=ma.order,figdir.path=figdir.path,
+                              startdate1=startdate1,startdate2=startdate2,
+                              duration1=duration1,duration2=duration2,
+                              makehmm=makehmm,makecd=makecd,makeplots=makeplots,save.data=save.data),SIMPLIFY=FALSE)
+@
+
+\clearpage
+
+\section{Appendix}
+
+\clearpage
+
+\subsection{R session info}
+
+<<echo=FALSE, results="asis", message=FALSE, warning=FALSE, error=FALSE>>=
+toLatex(sessionInfo())
+@
+
+\end{document}
+
