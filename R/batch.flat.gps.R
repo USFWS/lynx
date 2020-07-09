@@ -1,5 +1,5 @@
 
-batch.flat.gps <- function(iridium_csv.dir=NULL,
+batch.flat.gps <- function(iridium_csv.dir="s:/im_archive/boreal_lynx/products/iridium_csv",
                            save.file=TRUE,
                            save.dir=NULL,
                            returnx=FALSE,
@@ -12,7 +12,15 @@ batch.flat.gps <- function(iridium_csv.dir=NULL,
     nfiles = length(files)
     ## extract all CTNs
     ## process and aggregate all GPS data
+    ##    print(system.time({
     x <- do.call("rbind", lapply(files, flat.gps))
+    ##    }))
     if(save.file){save(x, file=paste0(save.dir,"/flat.gps.gzip"))}
     if(returnx){return(x)}
+}
+
+
+xlist <- vector("list",nfiles)
+for(i in 1:nfiles){
+    xlist[[i]] <- flat.gps(files[i])
 }
