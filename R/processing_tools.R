@@ -23,12 +23,7 @@ get_captables <- function(file_names, telonics = TRUE, sites = c("kan", "kuk", "
         return(table)
     },
     table = cap_tables, site = names(siteids), SIMPLIFY = FALSE))
-    col_keep <- c("Capture_Date", "Lynx_ID", "Site", "Den_ID", "Sex", "Age", "Ear_Tag_Left",
-                  "Ear_Tag_Right", "Collar_Removed", "Removed_Collar_Make", "Removed_Collar_Model",
-                  "Removed_Collar_SN", "Removed_Collar_Freq", "Capture_UTMe", "Capture_UTMn", "Capture_Lon",
-                  "Capture_Lat", "Recapture", "Collar_Deployed", "Collar_Make", "Collar_Model", "Collar_SN",
-                  "Frequency", "Anaesthetized")
-    cap_dat <- cap_dat[is.na(cap_dat$Den_ID),col_keep] # remove records w/ den IDs (newborn kittens)
+    cap_dat <- cap_dat[is.na(cap_dat$Den_ID),] # remove records w/ den IDs (newborn kittens)
     if(telonics){
     cap_dat <- cap_dat[cap_dat$Removed_Collar_Make %in% "Telonics" | cap_dat$Collar_Make %in% "Telonics",]
     }
