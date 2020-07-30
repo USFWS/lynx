@@ -19,7 +19,7 @@ get_captables <- function(file_names, telonics = TRUE, sites = c("kan", "kuk", "
     cap_tables <- lapply(file_names, import_tables, table_name = "captures")
     names(cap_tables) <- names(siteids)
     cap_dat <- do.call("rbind", mapply(function(table, site){
-        table$Site = toupper(site )
+        table$Capture_Site = toupper(site )
         return(table)
     },
     table = cap_tables, site = names(siteids), SIMPLIFY = FALSE))
