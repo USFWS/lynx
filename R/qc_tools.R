@@ -202,9 +202,9 @@ qc_captures <- function(captures){
 
 #' Helper Function to Find Collars Deployed on >1 Lynx
 #'
-#' @param captures A data.frame object created from \code{import.captures} function
+#' @param captures A data.frame object created from \code{import.captures} function.
 #'
-#' @return  data.frame containing row index, error message, and error code for capture records flagged with errors.
+#' @return  A data.frame containing row index, error message, and error code for capture records flagged with errors.
 #'
 
 find.octc <- function(captures){
@@ -233,3 +233,43 @@ find.octc <- function(captures){
     }
     return(data_errors)
 }
+
+
+#' Remove Lynx and Collars with Red-Light Errors
+#'
+#' @param captures A data.frame object created from \code{import.captures} function.
+#' @param capture_errors A data.frame object created from \code{qc_captures} function.
+#'
+#' @return A data.frame of capture records with "red-light" errors removed.
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' captures <- import_captures(file_names)
+#' capture_errors <- qc_captures(captures)
+#' clean_captures <- remove_capture_errors(captures, capture_errors)}
+
+remove_capture_errors <- function(captures, capture_errors){
+    remrows = capture_errors$row_index[capture_errors$error_code == "red"]
+    remcollars = as.character(unlist(captures[remrows, c("Collar_SN","Removed_Collar_SN")]))
+    remlynx = captures$Lynx_ID[remrows]
+    captures_keep = captures[!captures$Lynx_ID %in% remlynx |
+                                 !captures$Collar_SN %in% remcollars |
+                                 !captures$Removed_Collar_SN %in% remcollars,]
+    return(captures_keep)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
