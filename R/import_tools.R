@@ -47,7 +47,7 @@ import_captures <- function(file_names, telonics = TRUE, sites = c("kan", "kuk",
   cap_dat$Removed_Collar_SN[remtel_obs & remcollsn_indz] = paste0(cap_dat$Removed_Collar_SN[remtel_obs & remcollsn_indz], "A")
   ## remove non-Telonics collars
   if(telonics){
-    cap_dat <- cap_dat[tel_obs,]
+    cap_dat <- cap_dat[deptel_obs | remtel_obs,]
   }
   cap_dat <- refactor(cap_dat[order(cap_dat$Capture_Date),])
   return(cap_dat)
