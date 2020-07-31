@@ -21,7 +21,7 @@ import_table <- function(full_file_path, table_name) {
 #' @param telonics Logical value indicating whether to only compile records for Telonics collars. Default is TRUE.
 #' @param sites Character vector of site codes used to identify Access database file names to be used.
 #'
-#' @return Data.frame
+#' @return A data.frame of compiled capture records.
 #' @export
 #'
 #' @examples
