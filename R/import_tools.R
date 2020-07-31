@@ -39,11 +39,12 @@ import_captures <- function(file_names, telonics = TRUE, sites = c("kan", "kuk",
   table = cap_tables, site = names(siteids), SIMPLIFY = FALSE))
   cap_dat <- cap_dat[is.na(cap_dat$Den_ID),] # remove records w/ den IDs (newborn kittens)
   ## add "A" to Telonics collar IDs
-  tel_obs = which(cap_dat$Removed_Collar_Make %in% "Telonics" | cap_dat$Collar_Make %in% "Telonics")
-  collsn_indz = which(!is.na(cap_dat$Collar_SN[tel_obs]) & !grepl("A",cap_dat$Collar_SN[tel_obs]))
-  cap_dat$Collar_SN[collsn_indz] = paste0(cap_dat$Collar_SN[collsn_indz], "A")
-  remcollsn_indz = which(!is.na(cap_dat$Removed_Collar_SN[tel_obs]) & !grepl("A",cap_dat$Removed_Collar_SN[tel_obs]))
-  cap_dat$Removed_Collar_SN[remcollsn_indz] = paste0(cap_dat$Removed_Collar_SN[remcollsn_indz], "A")
+  deptel_obs = cap_dat$Collar_Make %in% "Telonics"
+  collsn_indz = !is.na(cap_dat$Collar_SN) & !grepl("A",cap_dat$Collar_SN)
+  cap_dat$Collar_SN[deptel_obs & collsn_indz] = paste0(cap_dat$Collar_SN[deptel_obs & collsn_indz], "A")
+  remtel_obs = cap_dat$Removed_Collar_Make %in% "Telonics"
+  remcollsn_indz = !is.na(cap_dat$Removed_Collar_SN) & !grepl("A",cap_dat$Removed_Collar_SN)
+  cap_dat$Removed_Collar_SN[remtel_obs & remcollsn_indz] = paste0(cap_dat$Removed_Collar_SN[remtel_obs & remcollsn_indz], "A")
   ## remove non-Telonics collars
   if(telonics){
     cap_dat <- cap_dat[tel_obs,]
