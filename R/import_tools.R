@@ -7,9 +7,9 @@
 #' @return Data.frame
 
 import_table <- function(full_file_path, table_name) {
-    con <- RODBC::odbcDriverConnect(paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=",
+    con = RODBC::odbcDriverConnect(paste0("Driver={Microsoft Access Driver (*.mdb, *.accdb)};DBQ=",
                                            full_file_path,";"))
-    df <- RODBC::sqlFetch(con, table_name)
+    df = RODBC::sqlFetch(con, table_name)
     RODBC::odbcClose(con)
     return(df)
 }
@@ -29,15 +29,15 @@ import_table <- function(full_file_path, table_name) {
 #' import_captures("tet_lynx_capture_database_202000101.accdb")}
 
 import_captures <- function(file_names, telonics = TRUE, sites = c("kan", "kuk", "tet", "wsm", "ykf")){
-  siteids <- unlist(sapply(sites, grep, x = file_names))
-  cap_tables <- lapply(file_names, import_table, table_name = "captures")
-  names(cap_tables) <- names(siteids)
-  cap_dat <- do.call("rbind", mapply(function(table, site){
+  siteids = unlist(sapply(sites, grep, x = file_names))
+  cap_tables = lapply(file_names, import_table, table_name = "captures")
+  names(cap_tables) = names(siteids)
+  cap_dat = do.call("rbind", mapply(function(table, site){
     table$Capture_Site = toupper(site )
     return(table)
   },
   table = cap_tables, site = names(siteids), SIMPLIFY = FALSE))
-  cap_dat <- cap_dat[is.na(cap_dat$Den_ID),] # remove records w/ den IDs (newborn kittens)
+  cap_dat = cap_dat[is.na(cap_dat$Den_ID),] # remove records w/ den IDs (newborn kittens)
   ## add "A" to Telonics collar IDs
   deptel_obs = cap_dat$Collar_Make %in% "Telonics"
   collsn_indz = !is.na(cap_dat$Collar_SN) & !grepl("A",cap_dat$Collar_SN)
@@ -47,8 +47,8 @@ import_captures <- function(file_names, telonics = TRUE, sites = c("kan", "kuk",
   cap_dat$Removed_Collar_SN[remtel_obs & remcollsn_indz] = paste0(cap_dat$Removed_Collar_SN[remtel_obs & remcollsn_indz], "A")
   ## remove non-Telonics collars
   if(telonics){
-    cap_dat <- cap_dat[deptel_obs | remtel_obs,]
+    cap_dat = cap_dat[deptel_obs | remtel_obs,]
   }
-  cap_dat <- refactor(cap_dat[order(cap_dat$Capture_Date),])
+  cap_dat = refactor(cap_dat[order(cap_dat$Capture_Date),])
   return(cap_dat)
 }
