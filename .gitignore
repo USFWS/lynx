@@ -1,4 +1,6 @@
 .Rproj.user
 .Rhistory
 .RData
-data/raw_data/
+data
+blank.R
+nwbf_lynx_gps_code_v2.0.R
