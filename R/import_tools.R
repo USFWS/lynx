@@ -26,7 +26,7 @@ import_table <- function(full_file_path, table_name) {
 #'
 #' @examples
 #' \dontrun{
-#' get_captables("tet_lynx_capture_database_202000101.accdb")}
+#' import_captures("tet_lynx_capture_database_202000101.accdb")}
 
 import_captures <- function(file_names, telonics = TRUE, sites = c("kan", "kuk", "tet", "wsm", "ykf")){
   siteids <- unlist(sapply(sites, grep, x = file_names))
