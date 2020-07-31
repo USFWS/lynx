@@ -4,7 +4,7 @@
 #' Compile Capture Tables from Site-specific NWBF Lynx Access Databases
 #'
 #' @param file_names Character vector of full file paths to Access databases including file name
-#' @param telonics Logical indicating whether to only compile records with Telonics collars deployed or removed. Default is TRUE.
+#' @param telonics Logical value indicating whether to only compile records for Telonics collars. Default is TRUE.
 #' @param sites Character vector of site codes used to identify Access database file names to be used.
 #'
 #' @return Data.frame
@@ -28,9 +28,7 @@ get_captables <- function(file_names, telonics = TRUE, sites = c("kan", "kuk", "
     cap_dat <- cap_dat[cap_dat$Removed_Collar_Make %in% "Telonics" | cap_dat$Collar_Make %in% "Telonics",]
     }
     cap_dat <- refactor(cap_dat[order(cap_dat$Capture_Date),])
-    ##cap_dat$Removed_Collar_SN <- sub("A","",cap_dat$Removed_Collar_SN) # remove "A" character from collar SNs
-    ##cap_dat$Collar_SN <- sub("A","",cap_dat$Collar_SN) # remove "A" character from collar SNs
-    cap_dat
+    return(cap_dat)
 }
 
 
