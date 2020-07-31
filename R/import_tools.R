@@ -30,7 +30,7 @@ import_table <- function(full_file_path, table_name) {
 
 import_captures <- function(file_names, telonics = TRUE, sites = c("kan", "kuk", "tet", "wsm", "ykf")){
   siteids <- unlist(sapply(sites, grep, x = file_names))
-  cap_tables <- lapply(file_names, import_tables, table_name = "captures")
+  cap_tables <- lapply(file_names, import_table, table_name = "captures")
   names(cap_tables) <- names(siteids)
   cap_dat <- do.call("rbind", mapply(function(table, site){
     table$Capture_Site = toupper(site )
