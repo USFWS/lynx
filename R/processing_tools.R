@@ -1,35 +1,32 @@
 
 
-
-#' Compile Capture Tables from Site-specific NWBF Lynx Access Databases
+#' Convert Lynx Capture Data to Animal Table for AniTrackTools
 #'
-#' @param file_names Character vector of full file paths to Access databases including file name
-#' @param telonics Logical value indicating whether to only compile records for Telonics collars. Default is TRUE.
-#' @param sites Character vector of site codes used to identify Access database file names to be used.
+#' @param caps A data.frame of lynx capture data imported from Access database(s)
 #'
-#' @return Data.frame
+#' @return A data.frame formatted for use with AniTrackTools
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' get_captables("tet_lynx_capture_database_202000101.accdb")}
+#' captures <- import_captures("tet_lynx_capture_database_202000101.accdb")
+#' caps2animals(captures)}
 
-get_captables <- function(file_names, telonics = TRUE, sites = c("kan", "kuk", "tet", "wsm", "ykf")){
-    siteids <- unlist(sapply(sites, grep, x = file_names))
-    cap_tables <- lapply(file_names, import_tables, table_name = "captures")
-    names(cap_tables) <- names(siteids)
-    cap_dat <- do.call("rbind", mapply(function(table, site){
-        table$Capture_Site = toupper(site )
-        return(table)
-    },
-    table = cap_tables, site = names(siteids), SIMPLIFY = FALSE))
-    cap_dat <- cap_dat[is.na(cap_dat$Den_ID),] # remove records w/ den IDs (newborn kittens)
-    if(telonics){
-    cap_dat <- cap_dat[cap_dat$Removed_Collar_Make %in% "Telonics" | cap_dat$Collar_Make %in% "Telonics",]
-    }
-    cap_dat <- refactor(cap_dat[order(cap_dat$Capture_Date),])
-    return(cap_dat)
+caps2animals <- function(caps){
+  caps_names = c("Lynx_ID","Capture_Site","Capture_Date","Sex","Age","Collar_SN")
+  att_names = c("animal_id","capture_site","capture_date","sex","age","collar_id")
+  caps = caps[,names(caps) %in% caps_names,]
+  caps = caps[,match(caps_names, names(caps))]
+  names(caps) = att_names
+  caps = caps[order(caps$capture_date),]
+  capsl = split(caps, caps$animal_id)
+  collar_ids = sapply(capsl, function(x){paste0(x$collar_id, collapse = ", ")})
+  caps = caps[!duplicated(caps$animal_id),]
+  caps$collar_id = collar_ids[match(caps$animal_id, names(collar_ids))]
+  names(caps)[names(caps) == "collar_id"] = "collar_ids"
+  return(caps)
 }
+
 
 
 
