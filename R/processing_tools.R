@@ -18,7 +18,7 @@ caps2animals <- function(caps){
   caps = caps[,names(caps) %in% caps_names,]
   caps = caps[,match(caps_names, names(caps))]
   names(caps) = att_names
-  caps = caps[order(caps$capture_date),]
+  caps = caps[order(caps$release_date),]
   capsl = split(caps, caps$animal_id)
   collar_ids = sapply(capsl, function(x){paste0(x$collar_id, collapse = ", ")})
   caps = caps[!duplicated(caps$animal_id),]
