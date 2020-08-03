@@ -14,7 +14,7 @@
 
 caps2animals <- function(caps){
   caps_names = c("Lynx_ID","Capture_Site","Capture_Date","Sex","Age","Collar_SN")
-  att_names = c("animal_id","capture_site","capture_date","sex","age","collar_id")
+  att_names = c("animal_id","release_site","release_date","sex","age","collar_id")
   caps = caps[,names(caps) %in% caps_names,]
   caps = caps[,match(caps_names, names(caps))]
   names(caps) = att_names
