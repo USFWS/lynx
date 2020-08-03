@@ -16,8 +16,8 @@ Data.frame
 Recalculate Factor Levels Based on Unique Values
 }
 \examples{
-df = data.frame(x = factor(LETTERS[1:5], levels = LETTERS[1:10]))
+df <-  data.frame(x = factor(LETTERS[1:5], levels = LETTERS[1:10]))
 (length(unique(df$x))==nlevels(df$x))
-df = refactor(df)
+df <-  refactor(df)
 (length(unique(df$x))==nlevels(df$x))
 }
