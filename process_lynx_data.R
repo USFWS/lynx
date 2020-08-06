@@ -3,9 +3,7 @@
 library(AniTrackTools)
 library(lynx)
 ## load and compile telonics csv file
-files <- list.files("../directory_path", pattern="Complete", full=TRUE)
-  gps_df <- do.call("rbind", lapply(files, import_telcsv, nskip = 23,
-                                    fix_attempt_keep = c("Resolved QFP", "Resolved QFP (Uncertain)")))
+gps_df <- import_TelCSVs("../directory_path", csv_pattern="Complete")
 ## load and compile site-specific capture Access dbs
 file_names <- list.files("../directory_path", full.names=TRUE)
 captures <- import_captures(file_names)
