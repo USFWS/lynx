@@ -15,18 +15,40 @@
 caps2animals <- function(caps){
   caps_names = c("Lynx_ID","Capture_Site","Capture_Date","Sex","Age","Collar_SN")
   att_names = c("animal_id","release_site","release_date","sex","age","collar_id")
-  caps = caps[,names(caps) %in% caps_names,]
-  caps = caps[,match(caps_names, names(caps))]
-  names(caps) = att_names
-  caps = caps[order(caps$release_date),]
-  capsl = split(caps, caps$animal_id)
-  collar_ids = sapply(capsl, function(x){paste0(x$collar_id, collapse = ", ")})
-  caps = caps[!duplicated(caps$animal_id),]
-  caps$collar_id = collar_ids[match(caps$animal_id, names(collar_ids))]
-  names(caps)[names(caps) == "collar_id"] = "collar_ids"
-  return(caps)
+  animals = caps[,names(caps) %in% caps_names,]
+  animals = animals[,match(caps_names, names(animals))]
+  names(animals) = att_names
+  animals = animals[order(animals$release_date),]
+  animalsl = split(animals, animals$animal_id)
+  collar_ids = sapply(animalsl, function(x){paste0(x$collar_id, collapse = ", ")})
+  animals = animals[!duplicated(animals$animal_id),]
+  animals$collar_id = collar_ids[match(animals$animal_id, names(collar_ids))]
+  rownames(animals) = NULL
+  return(animals)
 }
 
 
 
+#' Convert Lynx Capture Data to Collar Table for AniTrackTools
+#'
+#' @param caps A data.frame of lynx capture data imported from Access database(s)
+#'
+#' @return A data.frame formatted for use with AniTrackTools
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' captures <- import_captures("tet_lynx_capture_database_202000101.accdb")
+#' caps2animals(captures)}
+
+caps2collars <- function(caps){
+  caps_names = c("Lynx_ID","Capture_Site","Capture_Date","Collar_SN")
+  att_names = c("animal_id","deploy_site","deploy_date","collar_id")
+  collars = caps[,names(caps) %in% caps_names,]
+  collars = collars[,match(caps_names, names(collars))]
+  names(collars) = att_names
+  collars = collars[order(collars$deploy_date),c("collar_id","animal_id","deploy_date","deploy_site")]
+  rownames(collars) = NULL
+  return(collars)
+}
 
