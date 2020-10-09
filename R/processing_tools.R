@@ -18,10 +18,11 @@ caps2animals <- function(caps){
   animalsl = split(animals, animals$animal_id)
   collar_ids = sapply(animalsl, function(x){paste0(x$collar_id, collapse = ", ")})
   animals = animals[!duplicated(animals$animal_id),]
-  animals$collar_id = collar_ids[match(animals$animal_id, names(collar_ids))]
+  animals$collar_ids = collar_ids[match(animals$animal_id, names(collar_ids))]
   rownames(animals) = NULL
   return(animals)
 }
+
 
 
 
