@@ -6,11 +6,7 @@
 #'
 #' @return A data.frame formatted for use with AniTrackTools
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' captures <- import_captures("tet_lynx_capture_database_202000101.accdb")
-#' caps2animals(captures)}
+
 
 caps2animals <- function(caps){
   caps_names = c("Lynx_ID","Capture_Site","Capture_Date","Sex","Age","Collar_SN")
@@ -35,11 +31,7 @@ caps2animals <- function(caps){
 #'
 #' @return A data.frame formatted for use with AniTrackTools
 #' @export
-#'
-#' @examples
-#' \dontrun{
-#' captures <- import_captures("tet_lynx_capture_database_202000101.accdb")
-#' caps2animals(captures)}
+
 
 caps2collars <- function(caps){
   caps_names = c("Lynx_ID","Capture_Site","Capture_Date","Collar_SN")
