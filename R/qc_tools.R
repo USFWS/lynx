@@ -23,7 +23,7 @@ qc_captures <- function(captures){
     if(!all(col_test))
        stop(paste0("Warning: The following columns are missing from input:\n",
                    paste0(reqcols[!col_test], collapse = ", ")))
-    data_errors = c(row_indx = character(0), error_message = character(0), error_code = character(0))
+    data_errors = data.frame(row_indx = character(0), error_message = character(0), error_code = character(0))
     error_messages = character(0)
     ## missing lynx ID
     error_message = "Missing Lynx_ID"
@@ -31,7 +31,7 @@ qc_captures <- function(captures){
     test = which(is.na(captures$Lynx_ID))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
         data_errors = rbind(data_errors, add)
     }
     ## Incorrect site code in lynx ID
@@ -40,7 +40,7 @@ qc_captures <- function(captures){
     test = which(!(substr(captures$Lynx_ID, 1, 3) == captures$Capture_Site))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
         data_errors = rbind(data_errors, add)
     }
     ## Incorrect character length for lynx ID
@@ -49,7 +49,7 @@ qc_captures <- function(captures){
     test = which(nchar(as.character(captures$Lynx_ID)) != 6)
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
         data_errors = rbind(data_errors, add)
     }
     ## Incorrect individual code in lynx ID
@@ -58,7 +58,7 @@ qc_captures <- function(captures){
     test = which(is.na(as.numeric(substr(captures$Lynx_ID, 4, 6))))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
         data_errors = rbind(data_errors, add)
     }
     ## No collar deployed/no recapture/specs recorded for deployed collar
@@ -69,7 +69,7 @@ qc_captures <- function(captures){
                             function(x)any(!is.na(x))))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
         data_errors = rbind(data_errors, add)
     }
     ## collar deployed/no collar serial number
@@ -78,7 +78,7 @@ qc_captures <- function(captures){
     test = which(captures$Collar_Deployed == "Y" & is.na(captures$Collar_SN))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
         data_errors = rbind(data_errors, add)
     }
     ## collar deployed/no collar make
@@ -87,7 +87,7 @@ qc_captures <- function(captures){
     test = which(captures$Collar_Deployed == "Y" & is.na(captures$Collar_Make))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
         data_errors = rbind(data_errors, add)
     }
     ## collar deployed/no anesthesia
@@ -96,7 +96,7 @@ qc_captures <- function(captures){
     test = which(captures$Collar_Deployed == "Y" & captures$Anaesthetized == "N")
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
         data_errors = rbind(data_errors, add)
     }
     ## No collar removed/specs recorded for removed collar
@@ -108,7 +108,7 @@ qc_captures <- function(captures){
                             function(x)any(!is.na(x))))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
         data_errors = rbind(data_errors, add)
     }
     ## collar removed/no collar serial number
@@ -117,7 +117,7 @@ qc_captures <- function(captures){
     test = which(captures$Collar_Removed == "Y" & is.na(captures$Removed_Collar_SN))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "Red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "Red")
         data_errors = rbind(data_errors, add)
     }
     ## collar removed/no collar make
@@ -126,7 +126,7 @@ qc_captures <- function(captures){
     test = which(captures$Collar_Removed == "Y" & is.na(captures$Removed_Collar_Make))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
         data_errors = rbind(data_errors, add)
     }
     ## collar removed/no anesthesia
@@ -135,7 +135,7 @@ qc_captures <- function(captures){
     test = which(captures$Collar_Removed == "Y" & captures$Anaesthetized == "N")
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
         data_errors = rbind(data_errors, add)
     }
     ## collar removed/not recapture
@@ -144,7 +144,7 @@ qc_captures <- function(captures){
     test = which(captures$Collar_Removed == "Y" & captures$Recapture == "N")
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "yellow")
         data_errors = rbind(data_errors, add)
     }
     ## missing capture date
@@ -153,7 +153,7 @@ qc_captures <- function(captures){
     test = which(is.na(captures$Capture_Date))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
         data_errors = rbind(data_errors, add)
     }
     ## missing sex
@@ -162,7 +162,7 @@ qc_captures <- function(captures){
     test = which(is.na(captures$Sex))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
         data_errors = rbind(data_errors, add)
     }
     ## missing age
@@ -171,7 +171,7 @@ qc_captures <- function(captures){
     test = which(is.na(captures$Age))
     l = length(test)
     if(l != 0){
-        add = c(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
+        add = data.frame(row_index = as.character(test), error_message = rep(error_message, l), error_code = "red")
         data_errors = rbind(data_errors, add)
     }
     ## missing capture location data
