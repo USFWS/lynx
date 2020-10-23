@@ -223,19 +223,16 @@ find.octc <- function(captures){
     tmp = split(tmp, tmp$Collar_SN)
     indz = which(sapply(tmp, function(x)length(unique(x$Lynx_ID))) != 1)
     tmp = tmp[indz]
-    tmp = lapply(tmp,function(tmp){
-        test = sapply(split(tmp,tmp$Lynx_ID),nrow)
+    tmp = lapply(tmp,function(tt){
+        test = sapply(split(tt,tt$Lynx_ID),nrow)
         if(!all(test==1) & all(test<3)){
             NULL
         }else{
-            tmp
+            tt
         }
     })
     names(tmp) = NULL
     rows = row.names(do.call("rbind", tmp))
-    if(length(indz) != 0){
-        rows = sapply(tmp[indz], rownames)
-    }
     test = which(rownames(captures) %in% rows)
     l = length(test)
     if(l != 0){
