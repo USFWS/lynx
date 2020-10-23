@@ -196,6 +196,7 @@ qc_captures <- function(captures){
     data_errors$row_index = as.numeric(data_errors$row_index)
     data_errors$error_message = factor(data_errors$error_message, levels = error_messages)
     data_errors$error_code = factor(data_errors$error_code, levels = c("red", "yellow"))
+    data_errors = data_errors[order(data_errors$error_code),]
         return(data_errors)
     }
 
@@ -221,6 +222,17 @@ find.octc <- function(captures){
     tmp$Collar_SN = as.factor(tmp$Collar_SN)
     tmp = split(tmp, tmp$Collar_SN)
     indz = which(sapply(tmp, function(x)length(unique(x$Lynx_ID))) != 1)
+    tmp = tmp[indz]
+    tmp = lapply(tmp,function(tmp){
+        test = sapply(split(tmp,tmp$Lynx_ID),nrow)
+        if(!all(test==1) & all(test<3)){
+            NULL
+        }else{
+            tmp
+        }
+    })
+    names(tmp) = NULL
+    rows = row.names(do.call("rbind", tmp))
     if(length(indz) != 0){
         rows = sapply(tmp[indz], rownames)
     }
