@@ -7,11 +7,6 @@
 #' @return A data.frame containing row index, error message, and error code for capture records flagged with errors.
 #' @export
 #'
-#' @examples
-#' \dontrun{
-#' captures <- import_captures("tet_lynx_capture_database_202000101.accdb")}
-#' qc_captures(captures)}
-
 
 
 qc_captures <- function(captures){
@@ -186,8 +181,20 @@ qc_captures <- function(captures){
                           error_code = rep("yellow", l))
         data_errors = rbind(data_errors, add)
     }
+    ## missing deployment record for removed collar
+    error_message = "Missing deployment record for removed collar"
+    error_messages = c(error_messages, error_message)
+    rc = which(captures$Removed_Collar_Make=="Telonics" & !is.na(captures$Removed_Collar_SN))
+    test = rc[!captures$Removed_Collar_SN[rc] %in% captures$Collar_SN]
+    l = length(test)
+    if(l != 0){
+        add = data.frame(row_index = as.character(test),
+                         error_message = rep(error_message, l),
+                         error_code = rep("red", l))
+        data_errors = rbind(data_errors, add)
+    }
     ## collars recorded for multiple individuals
-    error_message = "Collar recorded as deployed on >1 individual"
+    error_message = "Collar recorded as deployed on >1 individual w/o removal from either"
     error_messages = c(error_messages, error_message)
     octc = find.octc(captures)
     if(nrow(octc) != 0){
@@ -209,10 +216,10 @@ qc_captures <- function(captures){
 #'
 
 find.octc <- function(captures){
-    error_message = "Collar recorded as deployed on >1 individual"
-    col_keep = c("Capture_Date","Lynx_ID","Sex","Age","Collar_Make","Collar_SN","Capture_Site")
+    error_message = "Collar recorded as deployed on >1 individual w/o removal from either"
+    col_keep = c("Capture_Date","Lynx_ID","Sex","Age","Collar_Make","Collar_SN","Capture_Site","row_index")
     dep = captures[!is.na(captures$Collar_SN), col_keep]
-    col_keep = c("Capture_Date","Lynx_ID","Sex","Age","Removed_Collar_Make","Removed_Collar_SN","Capture_Site")
+    col_keep = c("Capture_Date","Lynx_ID","Sex","Age","Removed_Collar_Make","Removed_Collar_SN","Capture_Site","row_index")
     rem = captures[!is.na(captures$Removed_Collar_SN), col_keep]
     colnames(rem)[colnames(rem) %in% c("Removed_Collar_Make","Removed_Collar_SN")] = c("Collar_Make","Collar_SN")
     if(nrow(rem) != 0){
@@ -232,8 +239,8 @@ find.octc <- function(captures){
         }
     })
     names(tmp) = NULL
-    rows = row.names(do.call("rbind", tmp))
-    test = which(rownames(captures) %in% rows)
+    rows = do.call("rbind", tmp)$row_index
+    test = which(captures$row_index %in% rows)
     l = length(test)
     if(l != 0){
         data_errors = data.frame(row_index = as.character(test),
@@ -252,11 +259,7 @@ find.octc <- function(captures){
 #' @return A data.frame of capture records with "red-light" errors removed.
 #' @export
 #'
-#' @examples
-#' \dontrun{
-#' captures <- import_captures(file_names)
-#' capture_errors <- qc_captures(captures)
-#' clean_captures <- remove_capture_errors(captures, capture_errors)}
+
 
 remove_capture_errors <- function(captures, capture_errors){
     remrows = capture_errors$row_index[capture_errors$error_code == "red"]
@@ -265,6 +268,7 @@ remove_capture_errors <- function(captures, capture_errors){
     captures_keep = captures[!captures$Lynx_ID %in% remlynx |
                                  !captures$Collar_SN %in% remcollars |
                                  !captures$Removed_Collar_SN %in% remcollars,]
+    row.names(captures_keep) = NULL
     return(captures_keep)
 }
 
