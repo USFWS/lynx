@@ -15,8 +15,3 @@ A data.frame formatted for use with AniTrackTools
 \description{
 Convert Lynx Capture Data to Animal Table for AniTrackTools
 }
-\examples{
-\dontrun{
-captures <- import_captures("tet_lynx_capture_database_202000101.accdb")
-caps2animals(captures)}
-}
