@@ -115,7 +115,7 @@ make_cvdat <- function(captures, locations){
 #' @return Input data.frame for Collar-Viewer including fix rate values
 #' @export
 
-add.fixrates <- function(dat, fxr_scheds){
+add_fixrates <- function(dat, fxr_scheds){
   names(fxr_scheds)[match(c("primary","aux_1","aux_2","aux_3"),names(fxr_scheds))] <- c("Primary","Auxiliary 1","Auxiliary 2","Auxiliary 3")
   dl = split(dat, dat$collar_id)
   for(i in 1:length(dl)){
