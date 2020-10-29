@@ -24,6 +24,6 @@ tpfs <- list.files("./data/raw_data/gps_collar/telonics/telonics_tpf", pattern =
 fxr_scheds <- do.call("rbind",lapply(tpfs, import_tpf))
 dat <- add.fixrates(dat, fxr_scheds)
 ## save R data object for upload to collar-viewer app
-save(dat, file = "./data/derived_data/collar_data_test.RData")
+save(dat, file = "./data/derived_data/collar_data_20201029.RData")
 
 
