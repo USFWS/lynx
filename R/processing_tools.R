@@ -116,7 +116,7 @@ make_cvdat <- function(captures, locations){
 #' @export
 
 add_fixrates <- function(dat, fxr_scheds){
-  names(fxr_scheds)[match(c("primary","aux_1","aux_2","aux_3"),names(fxr_scheds))] <- c("Primary","Auxiliary 1","Auxiliary 2","Auxiliary 3")
+  names(fxr_scheds)[match(c("primary","aux_1","aux_2","aux_3"),names(fxr_scheds))] = c("Primary","Auxiliary 1","Auxiliary 2","Auxiliary 3")
   dl = split(dat, dat$collar_id)
   for(i in 1:length(dl)){
     col_prog = fxr_scheds[fxr_scheds$ctn==dl[[i]]$collar_id[i],]
