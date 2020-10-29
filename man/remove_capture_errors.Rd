@@ -17,9 +17,3 @@ A data.frame of capture records with "red-light" errors removed.
 \description{
 Remove Lynx and Collars with Red-Light Errors
 }
-\examples{
-\dontrun{
-captures <- import_captures(file_names)
-capture_errors <- qc_captures(captures)
-clean_captures <- remove_capture_errors(captures, capture_errors)}
-}
