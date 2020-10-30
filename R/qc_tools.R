@@ -197,7 +197,7 @@ qc_captures <- function(captures){
     error_message = "Collar recorded as deployed on >1 individual w/o removal from either"
     error_messages = c(error_messages, error_message)
     octc = find.octc(captures)
-    if(nrow(octc) != 0){
+    if(!is.null(octc)){
         data_errors = rbind(data_errors, octc)
     }
     data_errors$row_index = as.numeric(data_errors$row_index)
@@ -246,8 +246,10 @@ find.octc <- function(captures){
         data_errors = data.frame(row_index = as.character(test),
                           error_message = rep(error_message, l),
                           error_code = rep("red", l))
+        return(data_errors)
+    }else{
+        NULL
     }
-    return(data_errors)
 }
 
 
